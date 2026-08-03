@@ -11,12 +11,11 @@ const ChatForm = ({ setChatHistory }) => {
         inputRef.current.value = '';
         //update the chat history with the new user message
         setChatHistory((history) => [...history, { sender: 'user', text: userMessage }]);
-    };
-    //add a thinking placeholder message from the bot after a delay of 600ms
+        //add a thinking placeholder message from the bot after a delay of 600ms
         setTimeout(() => {
             setChatHistory((history) => [...history, { sender: 'bot', text: 'Thinking...' }]);
         }, 600);
-
+    };
     return (
         <form action="#" className="chat-form" onSubmit={handleSubmit}>
             <input 

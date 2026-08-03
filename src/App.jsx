@@ -5,6 +5,23 @@ import ChatMessage from './components/ChatMessage';
 
 const App = () => {
   const [chathistory, setChatHistory] = useState([]);
+
+  //Fonction qui affiche juste l'historique dans la console
+  const generateBotResponse = (history) => {
+    console.log("Historique complet du chat:", history);
+    
+    // Afficher chaque message de façon détaillée
+    history.forEach((msg, index) => {
+      console.log(`Message ${index + 1}:`, msg);
+    });
+    
+    // Afficher le dernier message
+    const lastMessage = history[history.length - 1];
+    console.log(" Dernier message:", lastMessage);
+    console.log("Expéditeur:", lastMessage.sender);
+    console.log("Texte:", lastMessage.text);
+  };
+
   return (
     <div className="container">
       <div className="chatbot-popup">
@@ -16,6 +33,7 @@ const App = () => {
           </div>
           <button className="material-symbols-outlined">keyboard_arrow_down</button>
         </div>
+        
         {/* Chatbot body */}
         <div className="chatbot-body">
           <div className="message bot-message">
@@ -27,9 +45,14 @@ const App = () => {
             <ChatMessage key={index} message={message} />
           ))}
         </div>
+        
         {/* Chatbot footer */}
         <div className="chatbot-footer">
-          <ChatForm setChatHistory={setChatHistory} />
+          <ChatForm 
+            chathistory={chathistory} 
+            setChatHistory={setChatHistory} 
+            generateBotResponse={generateBotResponse} 
+          />
         </div>
       </div>
     </div>

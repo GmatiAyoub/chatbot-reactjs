@@ -1,21 +1,32 @@
 import { useRef } from 'react';
 
-const ChatForm = ({ setChatHistory }) => {
+const ChatForm = ({ chathistory, setChatHistory, generateBotResponse }) => {
     const inputRef = useRef(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const userMessage = inputRef.current.value.trim();
         if (!userMessage) return;
+        
         // Réinitialiser l'input après l'envoi
         inputRef.current.value = '';
-        //update the chat history with the new user message
+        
+        // Mettre à jour l'historique avec le nouveau message utilisateur
         setChatHistory((history) => [...history, { sender: 'user', text: userMessage }]);
-        //add a thinking placeholder message from the bot after a delay of 600ms
+        
+        // ✅ Ajouter un message "Thinking..." après 600ms
         setTimeout(() => {
             setChatHistory((history) => [...history, { sender: 'bot', text: 'Thinking...' }]);
         }, 600);
+        
+        // ✅ Appeler generateBotResponse avec l'historique complet après 700ms
+        setTimeout(() => {
+            // Créer l'historique complet avec le nouveau message
+            const updatedHistory = [...chathistory, { sender: 'user', text: userMessage }];
+            generateBotResponse(updatedHistory);
+        }, 700);
     };
+    
     return (
         <form action="#" className="chat-form" onSubmit={handleSubmit}>
             <input 

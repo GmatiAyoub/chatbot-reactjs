@@ -103,6 +103,8 @@ body {
   flex-direction: column;
   gap: 10px;
   background: #fafafa;
+  scrollbar-width: thin;
+  scrollbar-color: #ddd3f9 transparent;
 }
 
 .chatbot-body::-webkit-scrollbar {

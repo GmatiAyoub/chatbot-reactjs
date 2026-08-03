@@ -26,12 +26,7 @@ const App = () => {
           {chathistory.map((message, index) => (
             <ChatMessage key={index} message={message} />
           ))}
-
-          <div className="message user-message">
-            <p className="message-text">Lorem ipsum dolor sit amet consectetur adipiscing.</p>  
-          </div>
         </div>
-
         {/* Chatbot footer */}
         <div className="chatbot-footer">
           <ChatForm setChatHistory={setChatHistory} />

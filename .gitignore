@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+#dependency directories
+node_modules/
+
+#variables d'environnement
+.env    
+
+# Backend
+backend/node_modules
+backend/.env

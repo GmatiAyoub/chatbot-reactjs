@@ -1,25 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ChatbotIcon from './components/ChatbotIcon';
 import ChatForm from './components/ChatForm';
 import ChatMessage from './components/ChatMessage';
+import { generateResponse } from './services/geminiService';
 
 const App = () => {
-  const [chathistory, setChatHistory] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [isWaiting, setIsWaiting] = useState(false);
+  const [isBackendReady, setIsBackendReady] = useState(false);
 
-  //Fonction qui affiche juste l'historique dans la console
-  const generateBotResponse = (history) => {
-    console.log("Historique complet du chat:", history);
+  // Vérifier si le backend est accessible
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/health');
+        if (response.ok) {
+          setIsBackendReady(true);
+          console.log("✅ Backend connecté!");
+        } else {
+          console.warn("⚠️ Backend répond mais pas en bonne santé");
+          setIsBackendReady(false);
+        }
+      } catch (error) {
+        console.warn("⚠️ Backend non accessible:", error.message);
+        console.log("💡 Assure-toi que le backend tourne sur http://localhost:3000");
+        setIsBackendReady(false);
+      }
+    };
     
-    // Afficher chaque message de façon détaillée
-    history.forEach((msg, index) => {
-      console.log(`Message ${index + 1}:`, msg);
-    });
-    
-    // Afficher le dernier message
+    checkBackend();
+  }, []);
+
+  // Fonction pour générer la réponse du bot
+  const generateBotResponse = async (history) => {
+    // Récupérer le dernier message utilisateur
     const lastMessage = history[history.length - 1];
-    console.log(" Dernier message:", lastMessage);
-    console.log("Expéditeur:", lastMessage.sender);
-    console.log("Texte:", lastMessage.text);
+    if (!lastMessage || lastMessage.sender !== 'user') return;
+
+    setIsWaiting(true);
+
+    try {
+      // Filtrer l'historique pour enlever les "Thinking..."
+      const filteredHistory = history.filter(
+        msg => msg.text !== 'Thinking...'
+      );
+
+      // Obtenir la réponse du backend
+      const responseText = await generateResponse(
+        lastMessage.text,
+        filteredHistory
+      );
+
+      // Remplacer "Thinking..." par la vraie réponse
+      setChatHistory((currentHistory) => {
+        const newHistory = [...currentHistory];
+        const lastIndex = newHistory.length - 1;
+        
+        // Si le dernier message est "Thinking...", le remplacer
+        if (newHistory[lastIndex]?.text === 'Thinking...') {
+          newHistory[lastIndex] = { sender: 'bot', text: responseText };
+        } else {
+          // Sinon, ajouter un nouveau message
+          newHistory.push({ sender: 'bot', text: responseText });
+        }
+        return newHistory;
+      });
+    } catch (error) {
+      console.error("❌ Erreur lors de la génération de la réponse:", error);
+      
+      // En cas d'erreur, remplacer "Thinking..." par un message d'erreur
+      setChatHistory((currentHistory) => {
+        const newHistory = [...currentHistory];
+        const lastIndex = newHistory.length - 1;
+        if (newHistory[lastIndex]?.text === 'Thinking...') {
+          newHistory[lastIndex] = { 
+            sender: 'bot', 
+            text: "Désolé, je rencontre un problème technique. 😅" 
+          };
+        }
+        return newHistory;
+      });
+    } finally {
+      setIsWaiting(false);
+    }
   };
 
   return (
@@ -31,17 +94,28 @@ const App = () => {
             <ChatbotIcon />
             <h2 className="logo-text">chatbot</h2>
           </div>
-          <button className="material-symbols-outlined">keyboard_arrow_down</button>
+          <button className="material-symbols-outlined">
+            keyboard_arrow_down
+          </button>
         </div>
         
         {/* Chatbot body */}
         <div className="chatbot-body">
+          {/* Message initial du bot */}
           <div className="message bot-message">
             <ChatbotIcon />
-            <p className="message-text">hey there! How can I help you today?</p>  
+            <p className="message-text">
+              hey there! How can I help you today? 😊
+              {!isBackendReady && (
+                <span style={{ display: 'block', fontSize: '0.7rem', color: '#999', marginTop: '5px' }}>
+                  ⚠️ Mode hors-ligne (backend non disponible)
+                </span>
+              )}
+            </p>  
           </div>
-          {/* Chat history dynamically */}
-          {chathistory.map((message, index) => (
+          
+          {/* Affichage dynamique de l'historique des messages */}
+          {chatHistory.map((message, index) => (
             <ChatMessage key={index} message={message} />
           ))}
         </div>
@@ -49,9 +123,10 @@ const App = () => {
         {/* Chatbot footer */}
         <div className="chatbot-footer">
           <ChatForm 
-            chathistory={chathistory} 
+            chatHistory={chatHistory} 
             setChatHistory={setChatHistory} 
-            generateBotResponse={generateBotResponse} 
+            generateBotResponse={generateBotResponse}
+            isWaiting={isWaiting}
           />
         </div>
       </div>

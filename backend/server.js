@@ -41,22 +41,25 @@ app.post('/api/chat', async (req, res) => {
 
     // Tentative d'appel à l'API Hugging Face
     try {
-      const response = await axios({
-        method: 'POST',
-        url: 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-small',
-        headers: {
-          'Authorization': `Bearer ${process.env.HF_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        data: { 
-          inputs: { 
-            past_user_inputs: [],
-            generated_responses: [],
-            text: message
-          }
-        },
-        timeout: 10000
-      });
+      // Remplacer la partie API par:
+const response = await axios({
+  method: 'POST',
+  url: 'https://openrouter.ai/api/v1/chat/completions',
+  headers: {
+    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+    'Content-Type': 'application/json',
+    'HTTP-Referer': 'http://localhost:3000',
+    'X-Title': 'Chatbot ReactJS'
+  },
+  data: {
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: message }],
+    temperature: 0.7,
+    max_tokens: 150
+  }
+});
+
+const reply = response.data.choices[0]?.message?.content || null;
 
       const reply = response.data?.[0]?.generated_text || null;
       

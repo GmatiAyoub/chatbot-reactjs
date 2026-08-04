@@ -32,11 +32,7 @@ const App = () => {
   }, []);
 
   // Fonction pour générer la réponse du bot
-  const generateBotResponse = async (history) => {
-    // Récupérer le dernier message utilisateur
-    const lastMessage = history[history.length - 1];
-    if (!lastMessage || lastMessage.sender !== 'user') return;
-
+  const generateBotResponse = async (userMessage, history) => {
     setIsWaiting(true);
 
     try {
@@ -47,7 +43,7 @@ const App = () => {
 
       // Obtenir la réponse du backend
       const responseText = await generateResponse(
-        lastMessage.text,
+        userMessage,
         filteredHistory
       );
 

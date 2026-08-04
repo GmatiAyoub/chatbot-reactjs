@@ -16,18 +16,18 @@ const ChatForm = ({ chatHistory, setChatHistory, generateBotResponse, isWaiting 
         inputRef.current.value = '';
         
         // Mettre à jour l'historique avec le nouveau message utilisateur
-        setChatHistory((history) => [...history, { sender: 'user', text: userMessage }]);
+        const updatedHistory = [...chatHistory, { sender: 'user', text: userMessage }];
+        setChatHistory(updatedHistory);
         
         // Ajouter un message "Thinking..." après 600ms
         setTimeout(() => {
             setChatHistory((history) => [...history, { sender: 'bot', text: 'Thinking...' }]);
+            
+            // Appeler la fonction pour générer la réponse après ajout du "Thinking..."
+            setTimeout(() => {
+                generateBotResponse(userMessage, updatedHistory);
+            }, 100);
         }, 600);
-        
-        // Appeler la fonction pour générer la réponse après 700ms
-        setTimeout(() => {
-            const updatedHistory = [...chatHistory, { sender: 'user', text: userMessage }];
-            generateBotResponse(updatedHistory);
-        }, 700);
     };
 
     return (

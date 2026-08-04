@@ -33,31 +33,39 @@ app.post('/api/chat', async (req, res) => {
     console.log("📩 Message reçu:", message);
 
     // Vérifier si la clé API existe
-    if (!process.env.NINJAS_API_KEY) {
-      console.warn("⚠️ Clé API manquante, fallback");
+    if (!process.env.HF_API_KEY) {
+      console.warn("⚠️ Clé API Hugging Face manquante, fallback");
       const random = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
       return res.json({ success: true, response: random, mode: 'fallback' });
     }
 
-    // Tentative d'appel à l'API Ninjas
+    // Tentative d'appel à l'API Hugging Face
     try {
       const response = await axios({
         method: 'POST',
-        url: 'https://api.api-ninjas.com/v1/chat',   // ✅ URL corrigée (sans "bot")
+        url: 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-small',
         headers: {
-          'X-Api-Key': process.env.NINJAS_API_KEY,
+          'Authorization': `Bearer ${process.env.HF_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        data: { message }
+        data: { 
+          inputs: { 
+            past_user_inputs: [],
+            generated_responses: [],
+            text: message
+          }
+        },
+        timeout: 10000
       });
 
-      const reply = response.data.response || response.data.reply || response.data.text;
+      const reply = response.data?.[0]?.generated_text || null;
+      
       if (reply) {
-        console.log("✅ Réponse API Ninjas:", reply);
+        console.log("✅ Réponse API Hugging Face:", reply);
         return res.json({ success: true, response: reply, mode: 'api' });
       }
     } catch (apiError) {
-      console.warn("⚠️ API Ninjas échouée:", apiError.message);
+      console.warn("⚠️ API Hugging Face échouée:", apiError.response?.status || apiError.message);
       // On continue vers le fallback
     }
 
@@ -79,12 +87,12 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     message: 'Backend is running!',
-    hasApiKey: !!process.env.NINJAS_API_KEY
+    hasApiKey: !!process.env.HF_API_KEY
   });
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend sur http://localhost:${PORT}`);
-  console.log(`🔑 Clé API Ninjas: ${process.env.NINJAS_API_KEY ? '✅ présente' : '❌ absente'}`);
-  console.log(`📌 Mode: ${process.env.NINJAS_API_KEY ? 'API + Fallback' : 'Fallback uniquement'}`);
+  console.log(`🔑 Clé API Hugging Face: ${process.env.HF_API_KEY ? '✅ présente' : '❌ absente'}`);
+  console.log(`📌 Mode: ${process.env.HF_API_KEY ? 'API + Fallback' : 'Fallback uniquement'}`);
 });
